@@ -1,8 +1,9 @@
 {
-  "name": "AutoProd — Sistema de Produção",
+  "name": "AutoProd — Turno da Noite",
   "short_name": "AutoProd",
-  "description": "Controle de produção automotiva — Turno da Manhã",
+  "description": "Sistema de controle de produção automotiva — Turno da Noite",
   "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0a0c0f",
   "theme_color": "#0a0c0f",
@@ -21,6 +22,9 @@
       "purpose": "any maskable"
     }
   ],
+  "screenshots": [],
   "categories": ["productivity", "business"],
-  "lang": "pt-BR"
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "prefer_related_applications": false
 }
