@@ -129,9 +129,23 @@ export default function RegistrarMontagemPage() {
         </div>
 
         {/* Step 3: VIN */}
-        <div style={stepStyle}>
+        <div 
+          style={{
+            ...stepStyle,
+            opacity: (!selectedEmpId || !selectedVersion) ? 0.6 : 1,
+            pointerEvents: (!selectedEmpId || !selectedVersion) ? 'none' : 'auto',
+          }}
+        >
           <StepHeader num={3} title="Bipar VIN" />
-          <VinScanner onScan={handleScan} disabled={loading} />
+          
+          {(!selectedEmpId || !selectedVersion) && (
+            <div className="mb-4 p-3 rounded-lg text-xs" style={{ background: 'rgba(255,255,255,0.03)', color: 'var(--text-tertiary)', border: '1px dashed var(--border-subtle)' }}>
+              ⚠️ Complete os passos 1 e 2 para liberar o scanner.
+            </div>
+          )}
+
+          <VinScanner onScan={handleScan} disabled={loading || !selectedEmpId || !selectedVersion} />
+          
           {error && (
             <div
               className="mt-3 p-3 rounded-lg text-sm"

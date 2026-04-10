@@ -107,26 +107,61 @@ function buildHourlyData(
   inicio: string,
   fim: string
 ): HourlyProduction[] {
-  const [startH] = inicio.split(':').map(Number)
-  const [endH] = fim.split(':').map(Number)
-  const currentHour = new Date().getHours()
+  if (!inicio || !fim) return []
 
-  const hours: HourlyProduction[] = []
-  for (let h = startH; h <= endH; h++) {
+  const [startH, startM] = inicio.split(':').map(Number)
+  const [endH] = fim.split(':').map(Number)
+  const now = new Date()
+  const currentHour = now.getHours()
+
+  const intervals: HourlyProduction[] = []
+
+  // 1. Primeiro intervalo (ex: 16:48 até 17:00)
+  if (startM > 0) {
+    const nextHour = (startH + 1) % 24
+    const label = `${inicio} - ${String(nextHour).padStart(2, '0')}:00`
+    
     const count = productions.filter((p) => {
-      const pHour = new Date(p.timestamp).getHours()
-      return pHour === h
+      const d = new Date(p.timestamp)
+      const ph = d.getHours()
+      const pm = d.getMinutes()
+      // Está na hora inicial mas após os minutos iniciais?
+      if (ph === startH) return pm >= startM
+      return false
     }).length
 
-    hours.push({
-      hora: `${String(h).padStart(2, '0')}h`,
-      horaNum: h,
+    intervals.push({
+      hora: label,
+      horaNum: startH,
       quantidade: count,
-      isCurrent: h === currentHour,
+      isCurrent: currentHour === startH,
     })
   }
 
-  return hours
+  // 2. Intervalos de horas cheias (ex: 17:00 até 18:00)
+  // Calculamos a quantidade de horas entre a primeira hora cheia e a última hora cheia
+  let h = startM > 0 ? (startH + 1) % 24 : startH
+  const totalHours = (endH - h + 24) % 24
+
+  for (let i = 0; i <= totalHours; i++) {
+    const currentH = (h + i) % 24
+    const nextH = (currentH + 1) % 24
+    const label = `${String(currentH).padStart(2, '0')}:00 - ${String(nextH).padStart(2, '0')}:00`
+
+    const count = productions.filter((p) => {
+      const ph = new Date(p.timestamp).getHours()
+      return ph === currentH
+    }).length
+
+    intervals.push({
+      hora: label,
+      horaNum: currentH,
+      quantidade: count,
+      isCurrent: currentHour === currentH,
+    })
+  }
+
+  return intervals
 }
 
 function buildRanking(productions: Production[]): RankingEntry[] {
