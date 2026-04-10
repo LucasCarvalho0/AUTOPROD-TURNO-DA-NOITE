@@ -58,6 +58,7 @@ export interface HourlyProduction {
   hora: string       // "06h", "07h", ...
   horaNum: number    // 6, 7, ...
   quantidade: number
+  objetivo: number   // Meta daquela hora
   isCurrent: boolean
 }
 

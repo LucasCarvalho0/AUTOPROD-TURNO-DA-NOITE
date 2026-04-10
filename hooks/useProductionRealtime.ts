@@ -115,17 +115,21 @@ function buildHourlyData(
   const currentHour = now.getHours()
 
   const intervals: HourlyProduction[] = []
+  const META_POR_HORA = 11
 
   // 1. Primeiro intervalo (ex: 16:48 até 17:00)
   if (startM > 0) {
     const nextHour = (startH + 1) % 24
     const label = `${inicio} - ${String(nextHour).padStart(2, '0')}:00`
     
+    // Meta proporcional aos minutos restantes da hora
+    const minutosRestantes = 60 - startM
+    const objetivo = Math.round((META_POR_HORA * minutosRestantes) / 60)
+    
     const count = productions.filter((p) => {
       const d = new Date(p.timestamp)
       const ph = d.getHours()
       const pm = d.getMinutes()
-      // Está na hora inicial mas após os minutos iniciais?
       if (ph === startH) return pm >= startM
       return false
     }).length
@@ -134,12 +138,12 @@ function buildHourlyData(
       hora: label,
       horaNum: startH,
       quantidade: count,
+      objetivo: objetivo,
       isCurrent: currentHour === startH,
     })
   }
 
   // 2. Intervalos de horas cheias (ex: 17:00 até 18:00)
-  // Calculamos a quantidade de horas entre a primeira hora cheia e a última hora cheia
   let h = startM > 0 ? (startH + 1) % 24 : startH
   const totalHours = (endH - h + 24) % 24
 
@@ -147,6 +151,9 @@ function buildHourlyData(
     const currentH = (h + i) % 24
     const nextH = (currentH + 1) % 24
     const label = `${String(currentH).padStart(2, '0')}:00 - ${String(nextH).padStart(2, '0')}:00`
+
+    // Regra: meta 0 se for horário de janta (21:00 às 22:00)
+    const objetivo = currentH === 21 ? 0 : META_POR_HORA
 
     const count = productions.filter((p) => {
       const ph = new Date(p.timestamp).getHours()
@@ -157,6 +164,7 @@ function buildHourlyData(
       hora: label,
       horaNum: currentH,
       quantidade: count,
+      objetivo: objetivo,
       isCurrent: currentHour === currentH,
     })
   }
