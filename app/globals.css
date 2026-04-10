@@ -1,0 +1,262 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 14% 6%;
+    --foreground: 210 20% 94%;
+    --card: 220 13% 10%;
+    --card-foreground: 210 20% 94%;
+    --popover: 220 13% 10%;
+    --popover-foreground: 210 20% 94%;
+    --primary: 43 100% 48%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 220 13% 14%;
+    --secondary-foreground: 210 20% 94%;
+    --muted: 220 13% 14%;
+    --muted-foreground: 215 16% 57%;
+    --accent: 43 100% 48%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 355 74% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 14%;
+    --input: 220 13% 14%;
+    --ring: 43 100% 48%;
+    --radius: 0.75rem;
+
+    --font-display: 'Rajdhani', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+
+    /* Custom industrial vars */
+    --bg-primary: #0a0c0f;
+    --bg-secondary: #111318;
+    --bg-tertiary: #181b22;
+    --border-subtle: rgba(255, 255, 255, 0.07);
+    --border-medium: rgba(255, 255, 255, 0.12);
+    --text-primary: #f0f2f5;
+    --text-secondary: #8a9bb0;
+    --text-tertiary: #4a5568;
+    --accent-yellow: #f5b800;
+    --accent-yellow-dark: #e0a800;
+    --accent-blue: #2d8cf0;
+    --accent-green: #18c97d;
+    --accent-red: #e84855;
+    --accent-purple: #8b5cf6;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-bg-primary text-text-primary;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-medium);
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  /* VIN display */
+  .vin-text {
+    font-family: var(--font-display);
+    letter-spacing: 0.15em;
+    color: var(--accent-yellow);
+  }
+
+  /* Progress bar shimmer */
+  .progress-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15));
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Glass card effect */
+  .glass-card {
+    background: rgba(17, 19, 24, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-subtle);
+  }
+
+  /* Industrial card */
+  .industrial-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+  }
+
+  /* Section divider */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 0.875rem;
+  }
+  .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+
+  /* Rank medal colors */
+  .rank-gold { color: #ffd700; }
+  .rank-silver { color: #c0c0c0; }
+  .rank-bronze { color: #cd7f32; }
+
+  /* Status badge */
+  .badge-active {
+    background: rgba(24, 201, 125, 0.12);
+    border: 1px solid rgba(24, 201, 125, 0.25);
+    color: var(--accent-green);
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-inactive {
+    background: rgba(74, 85, 104, 0.2);
+    border: 1px solid rgba(74, 85, 104, 0.3);
+    color: var(--text-tertiary);
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-l3 {
+    background: rgba(45, 140, 240, 0.15);
+    color: var(--accent-blue);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-l2 {
+    background: rgba(139, 92, 246, 0.15);
+    color: var(--accent-purple);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  /* Pulse dot */
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    animation: pulse-dot 2s infinite;
+  }
+
+  /* Top accent bar */
+  .accent-bar-yellow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent-yellow);
+    border-radius: 10px 10px 0 0;
+  }
+  .accent-bar-blue::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent-blue);
+    border-radius: 10px 10px 0 0;
+  }
+  .accent-bar-green::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent-green);
+    border-radius: 10px 10px 0 0;
+  }
+  .accent-bar-purple::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent-purple);
+    border-radius: 10px 10px 0 0;
+  }
+}
+
+/* Animations */
+@keyframes shimmer {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease forwards;
+}
+.animate-scale-in {
+  animation: scale-in 0.3s ease forwards;
+}
