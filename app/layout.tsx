@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { InstallPWA } from '@/components/pwa/InstallPWA'
 
 export const metadata: Metadata = {
   title: 'AutoProd — Sistema de Produção Automotiva',
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="antialiased" suppressHydrationWarning>
         {children}
+        <InstallPWA />
         <script
           dangerouslySetInnerHTML={{
             __html: `
