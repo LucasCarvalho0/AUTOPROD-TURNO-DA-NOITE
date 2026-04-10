@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ['exceljs'],
-  turbopack: {},
   // PWA will be handled manually via service worker
   headers: async () => [
     {
