@@ -62,7 +62,7 @@ export default function LoginPage() {
             }}
             suppressHydrationWarning
           >
-            ● TURNO DA NOITE
+            ● TURNO NOITE ATIVO
           </div>
         </div>
 
