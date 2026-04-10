@@ -128,7 +128,7 @@ export default function ConfiguracoesPage() {
             <div className="section-divider">Reset Automático</div>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               O sistema executa um reset diário automático às{' '}
-              <span className="font-display font-bold" style={{ color: 'var(--accent-yellow)' }}>02:00</span>.
+              <span className="font-display font-bold" style={{ color: 'var(--accent-yellow)' }}>05:00</span>.
               Isso zera o dashboard e o ranking para o próximo turno, mantendo o histórico completo.
             </p>
             <div
@@ -136,7 +136,7 @@ export default function ConfiguracoesPage() {
               style={{ color: 'var(--accent-green)' }}
             >
               <span className="pulse-dot" />
-              Próximo reset: hoje às 02:00
+              Próximo reset: hoje às 05:00
             </div>
           </div>
 

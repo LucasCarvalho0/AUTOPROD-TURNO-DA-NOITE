@@ -8,7 +8,7 @@ const DEFAULT_SETTINGS: Settings = {
   id: '',
   meta: 90,
   turno_inicio: '16:48',
-  turno_fim: '02:00',
+  turno_fim: '05:00',
   hora_extra: '04:00',
   updated_at: new Date().toISOString(),
 }

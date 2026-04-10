@@ -2,7 +2,7 @@
 // File: supabase/functions/daily-reset/index.ts
 // Cron: 0 23 * * * (every day at 23:00 BRT)
 
-export const DAILY_RESET_HOUR = 23
+export const DAILY_RESET_HOUR = 5
 
 /**
  * Client-side: check if reset should be triggered
@@ -11,9 +11,20 @@ export function shouldReset(lastResetDate: string | null): boolean {
   if (!lastResetDate) return true
   const last = new Date(lastResetDate)
   const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const lastDay = new Date(last.getFullYear(), last.getMonth(), last.getDate())
-  return today > lastDay
+  
+  // Se agora passou do horário de reset de hoje, e o último reset foi em um dia anterior
+  const todayReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), DAILY_RESET_HOUR, 0, 0)
+  const isAfterResetToday = now >= todayReset
+  
+  if (isAfterResetToday) {
+    // Se hoje já passou das 05:00, o último reset tem que ser de hoje às 05:00
+    return last < todayReset
+  } else {
+    // Se hoje ainda não deu 05:00, o último reset tem que ser de ontem às 05:00
+    const yesterdayReset = new Date(todayReset)
+    yesterdayReset.setDate(yesterdayReset.getDate() - 1)
+    return last < yesterdayReset
+  }
 }
 
 /**
@@ -21,8 +32,18 @@ export function shouldReset(lastResetDate: string | null): boolean {
  */
 export function getTodayRange(): { start: string; end: string } {
   const now = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
-  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+  const currentHour = now.getHours()
+  
+  let start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), DAILY_RESET_HOUR, 0, 0)
+  
+  // Se ainda não deu 05:00 da manhã, o "Dia de Produção" começou às 05:00 de ontem
+  if (currentHour < DAILY_RESET_HOUR) {
+    start.setDate(start.getDate() - 1)
+  }
+  
+  const end = new Date(start)
+  end.setHours(end.getHours() + 23, 59, 59, 999)
+
   return {
     start: start.toISOString(),
     end: end.toISOString(),
