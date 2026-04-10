@@ -52,24 +52,27 @@ export function Topbar({ title }: TopbarProps) {
         <h1 className="font-display text-xl font-bold tracking-wide" style={{ color: 'var(--text-primary)' }} suppressHydrationWarning>
           {title}
         </h1>
-        {userName && (
-          <span className="text-sm opacity-50" style={{ color: 'var(--text-secondary)' }}>
+        {mounted && userName && (
+          <span className="text-sm opacity-50" style={{ color: 'var(--text-secondary)' }} suppressHydrationWarning>
             Bem-vindo, {userName}
           </span>
         )}
       </div>
 
       <div className="flex items-center gap-4" suppressHydrationWarning>
-        <div
-          className="px-3 py-1 rounded-full text-xs font-medium"
-          style={{
-            background: 'rgba(24,201,125,0.12)',
-            border: '1px solid rgba(24,201,125,0.25)',
-            color: 'var(--accent-green)',
-          }}
-        >
-          ● TURNO ATIVO
-        </div>
+        {mounted && (
+          <div
+            className="px-3 py-1 rounded-full text-xs font-medium"
+            style={{
+              background: 'rgba(24,201,125,0.12)',
+              border: '1px solid rgba(24,201,125,0.25)',
+              color: 'var(--accent-green)',
+            }}
+            suppressHydrationWarning
+          >
+            ● TURNO ATIVO
+          </div>
+        )}
         <div className="font-display text-lg font-bold" style={{ color: 'var(--accent-yellow)' }} suppressHydrationWarning>
           {mounted ? time : '--:--:--'}
         </div>
