@@ -24,7 +24,7 @@ export function HourlyProductionChart({ data }: HourlyProductionChartProps) {
             <span style={{ color: 'var(--text-secondary)' }}>OBJETIVO</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-yellow)' }} />
+            <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-green)' }} />
             <span style={{ color: 'var(--text-secondary)' }}>REALIZADO</span>
           </div>
         </div>
@@ -41,7 +41,7 @@ export function HourlyProductionChart({ data }: HourlyProductionChartProps) {
                 {/* Labels above bars */}
                 <div className="absolute -top-5 left-0 right-0 flex justify-center gap-2 text-[8px] font-bold">
                   <span style={{ color: '#2d8cf0' }}>{item.objetivo}</span>
-                  <span style={{ color: item.quantidade >= item.objetivo && item.objetivo > 0 ? 'var(--accent-green)' : 'var(--accent-yellow)' }}>
+                  <span style={{ color: 'var(--accent-green)' }}>
                     {item.quantidade}
                   </span>
                 </div>
@@ -60,8 +60,8 @@ export function HourlyProductionChart({ data }: HourlyProductionChartProps) {
                   className="w-1.5 rounded-t-sm transition-all duration-500"
                   style={{
                     height: `${realH}%`,
-                    background: item.isCurrent ? 'var(--accent-yellow)' : 'rgba(245,184,0,0.4)',
-                    boxShadow: item.isCurrent ? '0 0 10px rgba(245,184,0,0.3)' : 'none',
+                    background: item.isCurrent ? 'var(--accent-green)' : 'rgba(34,197,94,0.4)',
+                    boxShadow: item.isCurrent ? '0 0 10px rgba(34,197,94,0.3)' : 'none',
                   }}
                 />
               </div>
