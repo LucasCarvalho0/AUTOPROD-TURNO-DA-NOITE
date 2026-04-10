@@ -30,7 +30,13 @@ export function VinScanner({ onScan, disabled }: VinScannerProps) {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      submitVin()
+      // Apenas sanitiza e valida visualmente, não envia mais automático
+      const cleaned = sanitizeVIN(vin)
+      const { valid } = validateVIN(cleaned)
+      if (valid) {
+        playSoundAsync('success')
+        // Mantém o VIN no campo para confirmação manual
+      }
     }
   }
 
@@ -42,10 +48,9 @@ export function VinScanner({ onScan, disabled }: VinScannerProps) {
       alert(error)
       return
     }
-    playSoundAsync('success')
     onScan(cleaned)
     setVin('')
-    inputRef.current?.focus()
+    setTimeout(() => inputRef.current?.focus(), 100)
   }, [vin, onScan])
 
   const openCamera = async () => {
@@ -69,7 +74,7 @@ export function VinScanner({ onScan, disabled }: VinScannerProps) {
         const { valid } = validateVIN(cleaned)
         if (valid) {
           playSoundAsync('success')
-          onScan(cleaned)
+          setVin(cleaned) // Apenas preenche o campo
           closeCamera()
         }
       },
@@ -122,23 +127,29 @@ export function VinScanner({ onScan, disabled }: VinScannerProps) {
       <div className="flex gap-3 flex-wrap">
         <button
           onClick={submitVin}
-          disabled={disabled || vin.length < 10}
-          className="flex-1 py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-40"
-          style={{ background: 'var(--accent-yellow)', color: '#000' }}
+          disabled={disabled || vin.length < 17}
+          className={`flex-1 py-4 rounded-xl font-display font-bold text-lg tracking-widest transition-all ${
+            vin.length === 17 ? 'animate-pulse shadow-lg scale-[1.02]' : 'opacity-40'
+          }`}
+          style={{ 
+            background: 'var(--accent-yellow)', 
+            color: '#000',
+            border: vin.length === 17 ? '2px solid #fff' : 'none'
+          }}
         >
-          Registrar VIN
+          {vin.length === 17 ? 'CONFIRMAR MONTAGEM' : 'REGISTRAR VIN'}
         </button>
         <button
-          onClick={() => setCameraOpen(true)}
+          onClick={openCamera}
           disabled={disabled}
-          className="px-5 py-3 rounded-xl text-sm font-medium transition-all"
+          className="px-6 py-4 rounded-xl text-sm font-bold transition-all"
           style={{
             background: 'rgba(45,140,240,0.12)',
             border: '1px solid rgba(45,140,240,0.25)',
             color: 'var(--accent-blue)',
           }}
         >
-          📷 Câmera
+          📷 CÂMERA
         </button>
         <button
           onClick={() => { setVin(''); inputRef.current?.focus() }}
