@@ -5,6 +5,8 @@
 // Configure o cron em:
 // Supabase Dashboard → Edge Functions → daily-reset → Schedule
 
+// @ts-ignore — import por URL é exclusivo do runtime Deno (funciona em produção na Supabase)
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {

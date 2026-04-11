@@ -4,10 +4,14 @@
     "lib": ["ESNext"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "allowImportingTsExtensions": true,
     "strict": true,
     "noEmit": true,
-    "types": ["@types/node"]
+    "allowImportingTsExtensions": true
   },
-  "exclude": ["../../../node_modules"]
+  "include": [
+    "./**/*.ts"
+  ],
+  "exclude": [
+    "../../../node_modules"
+  ]
 }
