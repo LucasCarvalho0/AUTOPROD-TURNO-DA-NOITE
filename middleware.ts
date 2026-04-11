@@ -1,11 +1,36 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// Rotas que exigem sessão válida
+const PROTECTED_PREFIXES = [
+  '/dashboard',
+  '/registrar-montagem',
+  '/ranking-turno',
+  '/historico',
+  '/funcionarios',
+  '/configuracoes',
+]
+
+// Rotas públicas (nunca redirecionar)
+const PUBLIC_PATHS = ['/login']
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Ignora rotas públicas — sem verificação alguma
+  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next()
+  }
+
+  // Verifica se a rota precisa de autenticação
+  const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p))
+  if (!isProtected) {
+    return NextResponse.next()
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // Se não houver chaves, deixa passar para não dar erro 500
   if (!supabaseUrl || !supabaseAnonKey) {
     return NextResponse.next()
   }
@@ -14,15 +39,25 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.next({ request })
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
-        getAll() { return request.cookies.getAll() },
+        getAll() {
+          return request.cookies.getAll()
+        },
         setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
         },
       },
     })
 
-    await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (!session) {
+      const loginUrl = new URL('/login', request.url)
+      return NextResponse.redirect(loginUrl)
+    }
+
     return response
   } catch (error) {
     console.error('Middleware Error:', error)
@@ -32,6 +67,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|icons|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    /*
+     * Executa apenas em rotas protegidas e ignora assets estáticos,
+     * evitando chamadas desnecessárias ao Supabase.
+     */
+    '/(dashboard|registrar-montagem|ranking-turno|historico|funcionarios|configuracoes)(.*)',
   ],
 }
