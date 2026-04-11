@@ -8,10 +8,12 @@ import { ProgressMeta } from '@/components/dashboard/ProgressMeta'
 import { HourlyProductionChart } from '@/components/dashboard/HourlyProductionChart'
 import { RealtimeRanking } from '@/components/dashboard/RealtimeRanking'
 import { LastCarBiped } from '@/components/dashboard/LastCarBiped'
+import { ExportActions } from '@/components/dashboard/ExportActions'
 
 export default function DashboardPage() {
   const { settings } = useSettings()
   const {
+    productions,
     totalToday,
     hourlyData,
     ranking,
@@ -38,6 +40,8 @@ export default function DashboardPage() {
                 Operação Ativa: Bipados desde às 05:00 AM (Reset Diário)
               </span>
             </div>
+
+            <ExportActions productions={productions} meta={settings.meta} />
 
             <StatsCards
               totalBipados={totalToday}
