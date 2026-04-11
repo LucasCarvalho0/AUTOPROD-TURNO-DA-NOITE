@@ -31,6 +31,14 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
+            {/* Debug Label - Reset Industrial */}
+            <div className="flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full border border-white/5 bg-white/[0.03] w-fit">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-[10px] uppercase tracking-widest text-white/50">
+                Operação Ativa: Bipados desde às 05:00 AM (Reset Diário)
+              </span>
+            </div>
+
             <StatsCards
               totalBipados={totalToday}
               meta={settings.meta}
@@ -43,8 +51,19 @@ export default function DashboardPage() {
               <div className="lg:col-span-2">
                 <HourlyProductionChart data={hourlyData} />
               </div>
-              <div>
+              <div className="flex flex-col">
                 <LastCarBiped last={lastProduction} />
+                <div 
+                  className="mt-4 p-4 rounded-xl border border-white/5 bg-white/[0.02] flex-1 flex flex-col justify-center items-center text-center"
+                >
+                  <span className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Status do Turno</span>
+                  <div className="text-xl font-bold text-white/80">
+                    {totalToday} Veículos
+                  </div>
+                  <div className="text-xs text-white/40 mt-1">
+                    Bipados desde ontem às {settings.turno_inicio}
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -12,22 +12,45 @@ export function StatsCards({ totalBipados, meta, turnoInicio }: StatsCardsProps)
   const progress = calcProgress(totalBipados, meta)
   const restantes = Math.max(0, meta - totalBipados)
 
-  // Calculate elapsed shift time
+  // Calculate elapsed shift time (Industrial/Operational Day logic)
   const [h, m] = turnoInicio.split(':').map(Number)
   const now = new Date()
   const start = new Date(now)
   start.setHours(h, m, 0, 0)
+  
+  // Se agora for madrugada (00:00 - 04:59), as 16:48 pertencem a ONTEM
+  if (now.getHours() < 5) {
+    if (h >= 5) { // Se o turno começou depois das 5h (ex: 16:48), ele é de ontem
+      start.setDate(start.getDate() - 1)
+    }
+  } else {
+    // Se agora for dia (>= 05:00), e o turno começou cedo demais (ex: 05:00 AM),
+    // ele tecnicamente pertence ao período que já resetou.
+    if (h < 5) {
+      // Caso raro: turno começando de madruga após o reset de hoje
+    } else {
+      // Turno normal (ex: 16:48) começou HOJE
+      if (now.getTime() < start.getTime()) {
+        // Se ainda não deu 16:48 hoje, o cronômetro deve ficar em 00:00 ou pegar o de ontem (mas aqui zera no reset)
+      }
+    }
+  }
+
   const elapsedMs = Math.max(0, now.getTime() - start.getTime())
-  const elapsedH = Math.floor(elapsedMs / 3600000)
-  const elapsedM = Math.floor((elapsedMs % 3600000) / 60000)
-  const elapsedStr = `${String(elapsedH).padStart(2, '0')}:${String(elapsedM).padStart(2, '0')}`
-  const mediaHora = elapsedH > 0 ? (totalBipados / elapsedH).toFixed(1) : totalBipados.toString()
+  const elapsedH = elapsedMs / 3600000
+  const hours = Math.floor(elapsedH)
+  const minutes = Math.floor((elapsedMs % 3600000) / 60000)
+  const elapsedStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+  
+  // Média por hora real (evita erro de divisão por zero e reflete o tempo decorrido)
+  const divisor = elapsedH > 0.1 ? elapsedH : 0.1 // Mínimo 6 minutos para começar a média
+  const mediaHora = (totalBipados / divisor).toFixed(1)
 
   const cards = [
     {
-      label: 'Carros Bipados Hoje',
+      label: 'Bipados Hoje',
       value: totalBipados,
-      sub: `${restantes} restantes para a meta`,
+      sub: `${restantes} para meta`,
       accent: 'var(--accent-yellow)',
       icon: '🚗',
     },
@@ -53,10 +76,17 @@ export function StatsCards({ totalBipados, meta, turnoInicio }: StatsCardsProps)
       accent: 'var(--accent-purple)',
       icon: '📈',
     },
+    {
+      label: 'Produtividade',
+      value: `${progress}%`,
+      sub: 'Eficiência total',
+      accent: 'var(--accent-orange)',
+      icon: '⚡',
+    },
   ]
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
       {cards.map((card) => (
         <div
           key={card.label}

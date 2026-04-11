@@ -1,7 +1,6 @@
-// @ts-nocheck
 // AutoProd — Daily Reset Edge Function
 // Deploy: supabase functions deploy daily-reset
-// Cron:   0 2 * * *    (todo dia às 02:00 BRT = 05:00 UTC)
+// Cron:   0 8 * * *    (todo dia às 05:00 BRT = 08:00 UTC)
 //
 // Configure o cron em:
 // Supabase Dashboard → Edge Functions → daily-reset → Schedule

@@ -30,18 +30,31 @@ export function useProductionRealtime(turnoInicio = '16:48', turnoFim = '05:00')
     try {
       const supabase = getSupabaseClient()
       const { start, end } = getTodayRange()
+      
+      const shiftStartTime = new Date(start).getTime()
+      const shiftEndTime = new Date(end).getTime()
 
-      console.log('[Dashboard] Fetching with range:', { start, end })
+      // SAFETY: Buscamos TUDO das últimas 48 horas (máxima segurança)
+      const safetyStartTime = Date.now() - (48 * 60 * 60 * 1000)
+      const safetyStartISO = new Date(safetyStartTime).toISOString()
 
-      // 1. Query para os dados do turno atual (zeram no reset)
-      const { data: rangeData, error: rangeError } = await supabase
+      const { data: allData, error: queryError } = await supabase
         .from('productions')
         .select('*, employee:employees(id, nome, ativo)')
-        .gte('timestamp', start)
-        .lte('timestamp', end)
+        .gte('timestamp', safetyStartISO)
         .order('timestamp', { ascending: false })
 
-      if (rangeError) throw rangeError
+      if (queryError) {
+        throw queryError
+      }
+
+      // Filtramos em memória usando timestamps numéricos (100% robusto contra fuso e milissegundos)
+      const prods = ((allData ?? []) as Production[]).filter(p => {
+        const pTime = new Date(p.timestamp).getTime()
+        return pTime >= shiftStartTime && pTime <= shiftEndTime
+      })
+
+      console.log(`[Dashboard] Busca 48h: ${allData?.length} registros | Turno atual: ${prods.length}`)
 
       // 2. Query para o ÚLTIMO carro absoluto (não zera no reset)
       const { data: lastData } = await supabase
@@ -50,9 +63,6 @@ export function useProductionRealtime(turnoInicio = '16:48', turnoFim = '05:00')
         .order('timestamp', { ascending: false })
         .limit(1)
         .maybeSingle()
-
-      const prods = (rangeData ?? []) as Production[]
-      console.log('[Dashboard] Rows fetched:', prods.length)
 
       setState({
         productions: prods,
@@ -132,7 +142,6 @@ function buildHourlyData(
   if (!inicio || !fim) return []
 
   const [startH, startM] = inicio.split(':').map(Number)
-  const [endH] = fim.split(':').map(Number)
   const now = new Date()
 
   const productionsWithDates = productions.map(p => ({
@@ -147,14 +156,9 @@ function buildHourlyData(
   const { start: shiftStartISO } = getTodayRange()
   const shiftStart = new Date(shiftStartISO)
   
-  // Vamos descobrir a data "Real" de início baseada em turno_inicio
-  // Se shiftStart é 05:00 de ontem e inicio é 16:48, o turno começou 16:48 de ontem.
+  // O "Início Real" do turno (ex: 16:48)
   const actualStart = new Date(shiftStart)
   actualStart.setHours(startH, startM, 0, 0)
-  
-  // Se o actualStart calculado acima ficou ANTES do shiftStart (o reset), 
-  // significa que na verdade o turno inicia no mesmo dia do reset (ex: turno inicia as 07:00 e reset as 05:00)
-  // Mas no nosso caso (16:48 e 05:00), 16:48 ontem é > 05:00 ontem. OK.
   
   // 1. Primeiro intervalo parcial (ex: 16:48 até 17:00)
   if (startM > 0) {
@@ -163,11 +167,11 @@ function buildHourlyData(
     endRange.setMinutes(0, 0, 0)
     endRange.setHours(endRange.getHours() + 1)
 
-    const label = `${inicio} AS ${String(endRange.getHours()).padStart(2, '0')}:00`
-    const objetivo = 2 // Fixado em 2 conforme imagem de referência Excel
+    const label = `${inicio} - ${String(endRange.getHours()).padStart(2, '0')}:00`
+    const objetivo = 2
     
     const count = productionsWithDates.filter((p) => {
-      return p.date.getTime() >= startRange.getTime() && p.date.getTime() < endRange.getTime()
+      return p.date >= startRange && p.date < endRange
     }).length
 
     intervals.push({
@@ -175,38 +179,41 @@ function buildHourlyData(
       horaNum: startH,
       quantidade: count,
       objetivo: objetivo,
-      isCurrent: now.getTime() >= startRange.getTime() && now.getTime() < endRange.getTime(),
+      isCurrent: now >= startRange && now < endRange,
     })
   }
 
-  // 2. Intervalos de horas cheias
+  // 2. Intervalos de horas cheias (Ex: 17:00 até 05:00)
   const firstFullHour = startM > 0 ? (startH + 1) % 24 : startH
-  const hourDiff = (endH - firstFullHour + 24) % 24
+  const endHourForChart = 5 
+  const totalHoursToShow = (endHourForChart - firstFullHour + 24) % 24
   
-  for (let i = 0; i <= hourDiff; i++) {
+  for (let i = 0; i < totalHoursToShow; i++) {
     const currentH = (firstFullHour + i) % 24
     
+    // Calcula o início e fim da janela horária cuidando da virada do dia
     const startRange = new Date(actualStart)
     startRange.setMinutes(0, 0, 0)
-    // Se passamos de 24h, o setHours cuida do incremento de dia
     startRange.setHours(actualStart.getHours() + (startM > 0 ? i + 1 : i))
 
     const endRange = new Date(startRange)
     endRange.setHours(startRange.getHours() + 1)
 
-    const label = `${String(currentH).padStart(2, '0')}:00 AS ${String((currentH + 1) % 24).padStart(2, '0')}:00`
+    const label = `${String(currentH).padStart(2, '0')}:00 - ${String((currentH + 1) % 24).padStart(2, '0')}:00`
     const objetivo = currentH === 21 ? 0 : META_POR_HORA
 
     const count = productionsWithDates.filter((p) => {
-      return p.date.getTime() >= startRange.getTime() && p.date.getTime() < endRange.getTime()
+      return p.date >= startRange && p.date < endRange
     }).length
+
+    console.log(`[Chart] Intervalo ${label}: ${count} veículos.`)
 
     intervals.push({
       hora: label,
       horaNum: currentH,
       quantidade: count,
       objetivo: objetivo,
-      isCurrent: now.getTime() >= startRange.getTime() && now.getTime() < endRange.getTime(),
+      isCurrent: now >= startRange && now < endRange,
     })
   }
 

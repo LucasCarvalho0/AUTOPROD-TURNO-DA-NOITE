@@ -1,26 +1,32 @@
 // Daily reset logic - to be deployed as a Supabase Edge Function
 // File: supabase/functions/daily-reset/index.ts
-// Cron: 0 23 * * * (every day at 23:00 BRT)
+// Cron: 0 8 * * * (todo dia às 05:00 BRT = 08:00 UTC)
 
 export const DAILY_RESET_HOUR = 5
 
 /**
- * Client-side: check if reset should be triggered
+ * LÓGICA DE DIA OPERACIONAL (Industrial)
+ * --------------------------------------
+ * Turno 2: Inicia às 16:48 e vai até a madrugada (até o reset das 05:00).
+ * O "dia" de produção só zera às 05:00 da manhã.
+ * 
+ * Exemplo: Se agora são 02:00 AM de sábado, o sistema deve considerar 
+ * que ainda estamos no turno de SEXTA-FEIRA.
  */
+
 export function shouldReset(lastResetDate: string | null): boolean {
   if (!lastResetDate) return true
   const last = new Date(lastResetDate)
   const now = new Date()
   
-  // Se agora passou do horário de reset de hoje, e o último reset foi em um dia anterior
+  // Ponto de virada oficial: 05:00 AM de hoje
   const todayReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), DAILY_RESET_HOUR, 0, 0)
-  const isAfterResetToday = now >= todayReset
   
-  if (isAfterResetToday) {
-    // Se hoje já passou das 05:00, o último reset tem que ser de hoje às 05:00
+  if (now >= todayReset) {
+    // Se já passou das 05:00 hoje, o último reset deve ter sido HOJE às 05:00
     return last < todayReset
   } else {
-    // Se hoje ainda não deu 05:00, o último reset tem que ser de ontem às 05:00
+    // Se ainda NÃO deu 05:00 hoje, o último reset deve ter sido ONTEM às 05:00
     const yesterdayReset = new Date(todayReset)
     yesterdayReset.setDate(yesterdayReset.getDate() - 1)
     return last < yesterdayReset
@@ -28,27 +34,27 @@ export function shouldReset(lastResetDate: string | null): boolean {
 }
 
 /**
- * Returns today's production window (since last reset)
+ * Returns today's production window (since last reset at 05:00)
  */
 export function getTodayRange(): { start: string; end: string } {
   const now = new Date()
-  const currentHour = now.getHours()
   
-  // Criamos o ponto de início (reset) em horário LOCAL
-  let start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), DAILY_RESET_HOUR, 0, 0)
+  // Criamos o ponto de início (reset) baseado no horário de reset diário (05:00) HOJE
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), DAILY_RESET_HOUR, 0, 0, 0)
   
-  // Se ainda não deu 05:00 da manhã local, o "Dia de Produção" começou às 05:00 de ontem local
-  if (currentHour < DAILY_RESET_HOUR) {
+  // Se agora ainda não deu 05:00 AM, o "Dia Operacional" começou às 05:00 de ONTEM
+  if (now.getTime() < start.getTime()) {
     start.setDate(start.getDate() - 1)
   }
   
+  // O fim do período é exatamente 24h após o início
   const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1)
 
-  console.log('[getTodayRange] Window:', {
-    localStart: start.toLocaleString(),
-    localEnd: end.toLocaleString(),
-    isoStart: start.toISOString(),
-    isoEnd: end.toISOString()
+  console.log('[DEBUG-RESET] Janela Ativa:', {
+    agora: now.toLocaleString(),
+    inicioFiltro: start.toLocaleString(),
+    fimFiltro: end.toLocaleString(),
+    startISO: start.toISOString()
   })
 
   return {

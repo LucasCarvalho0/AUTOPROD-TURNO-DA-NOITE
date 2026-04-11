@@ -6,9 +6,9 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   await requireAuth()
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }} suppressHydrationWarning>
+    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
       {/* Sidebar — desktop only */}
-      <div className="hidden md:flex" suppressHydrationWarning>
+      <div className="hidden md:flex">
         <Sidebar />
       </div>
 

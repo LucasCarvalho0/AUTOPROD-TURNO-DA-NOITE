@@ -3,9 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useSettings } from '@/hooks/useSettings'
 import { Topbar } from '@/components/layout/Topbar'
+import { DAILY_RESET_HOUR } from '@/utils/cron-reset'
 
 export default function ConfiguracoesPage() {
   const { settings, loading, updateSettings } = useSettings()
+  
+  const resetTimeStr = `${String(DAILY_RESET_HOUR).padStart(2, '0')}:00`
   const [form, setForm] = useState({
     meta: 120,
     turno_inicio: '15:00',
@@ -122,22 +125,19 @@ export default function ConfiguracoesPage() {
 
           {/* Reset info */}
           <div
-            className="rounded-xl p-4 mb-5"
+            className="rounded-xl p-6 mb-8"
             style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}
           >
-            <div className="section-divider">Reset Automático</div>
-            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-              O sistema executa um reset diário automático às{' '}
-              <span className="font-display font-bold" style={{ color: 'var(--accent-yellow)' }}>05:00</span>.
+            <div className="section-divider mb-4">Reset Automático</div>
+            
+            <p className="text-lg leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
+              O sistema executa um reset diário automático às <strong style={{ color: 'var(--accent-yellow)' }}>{resetTimeStr}</strong>.
               Isso zera o dashboard e o ranking para o próximo turno, mantendo o histórico completo.
             </p>
-            <div
-              className="mt-3 flex items-center gap-2 text-xs"
-              style={{ color: 'var(--accent-green)' }}
-            >
-              <span className="pulse-dot" />
-              Próximo reset: hoje às 05:00
-            </div>
+
+            <p className="text-lg font-bold" style={{ color: 'var(--accent-green)' }}>
+              Próximo reset: hoje às {resetTimeStr}
+            </p>
           </div>
 
           <button
