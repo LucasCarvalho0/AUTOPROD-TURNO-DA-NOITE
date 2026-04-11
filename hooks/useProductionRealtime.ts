@@ -155,8 +155,7 @@ function buildHourlyData(
     endRange.setHours(endRange.getHours() + 1)
 
     const label = `${inicio} AS ${String(endRange.getHours()).padStart(2, '0')}:00`
-    const minutosRestantes = 60 - startM
-    const objetivo = Math.round((META_POR_HORA * minutosRestantes) / 60)
+    const objetivo = 2 // Fixado em 2 conforme imagem de referência Excel
     
     const count = productionsWithDates.filter((p) => {
       return p.date.getTime() >= startRange.getTime() && p.date.getTime() < endRange.getTime()
