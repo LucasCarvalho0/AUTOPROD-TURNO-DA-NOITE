@@ -138,7 +138,7 @@ function buildHourlyData(
       endRange.setHours(endRange.getHours() + 1, 0, 0, 0)
     }
 
-    const label = `${inicio} - ${String(endRange.getHours()).padStart(2, '0')}:00`
+    const label = `${inicio} AS ${String(endRange.getHours()).padStart(2, '0')}:00`
     
     // Meta proporcional aos minutos restantes da hora
     const minutosRestantes = 60 - startM
@@ -173,7 +173,7 @@ function buildHourlyData(
     const endRange = new Date(startRange)
     endRange.setHours(startRange.getHours() + 1, 0, 0, 0)
 
-    const label = `${String(startRange.getHours()).padStart(2, '0')}:00 - ${String(endRange.getHours()).padStart(2, '0')}:00`
+    const label = `${String(currentH).padStart(2, '0')}:00 AS ${String(endRange.getHours()).padStart(2, '0')}:00`
 
     // Regra: meta 0 se for horário de janta (21:00 às 22:00)
     const objetivo = startRange.getHours() === 21 ? 0 : META_POR_HORA
