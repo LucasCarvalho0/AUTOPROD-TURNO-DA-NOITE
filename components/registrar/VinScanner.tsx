@@ -144,15 +144,15 @@ export function VinScanner({ onScan, disabled }: VinScannerProps) {
             onClick={submitVin}
             disabled={disabled || vin.length < 17}
             className={`flex-1 py-4 rounded-xl font-display font-bold text-lg tracking-widest transition-all ${
-              vin.length === 17 ? 'animate-pulse shadow-lg scale-[1.02]' : 'opacity-40'
+              vin.length === 17 ? 'shadow-lg scale-[1.02]' : 'opacity-40'
             }`}
             style={{ 
               background: 'var(--accent-yellow)', 
               color: '#000',
-              border: vin.length === 17 ? '2px solid #fff' : 'none'
+              border: vin.length === 17 ? '2px dashed #000' : 'none'
             }}
           >
-            {vin.length === 17 ? 'CONFIRMAR MONTAGEM' : 'REGISTRAR VIN'}
+            {vin.length === 17 ? 'REVISAR DADOS' : 'AGUARDANDO VIN'}
           </button>
           <button
             type="button"
