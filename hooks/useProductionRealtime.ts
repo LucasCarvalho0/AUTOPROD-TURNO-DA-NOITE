@@ -109,29 +109,43 @@ function buildHourlyData(
 ): HourlyProduction[] {
   if (!inicio || !fim) return []
 
+  const productionsWithDates = productions.map(p => ({
+    ...p,
+    date: new Date(p.timestamp)
+  }))
+
   const [startH, startM] = inicio.split(':').map(Number)
   const [endH] = fim.split(':').map(Number)
   const now = new Date()
-  const currentHour = now.getHours()
 
   const intervals: HourlyProduction[] = []
   const META_POR_HORA = 11
 
+  // Ponto de partida âncora: o início do turno de PRODUÇÃO (calculado via cron-reset)
+  const { start: shiftStartISO } = getTodayRange()
+  const shiftStart = new Date(shiftStartISO)
+  
+  // Criamos uma data base para os cálculos de horas cheias
+  const anchorDate = new Date(shiftStart)
+  anchorDate.setMinutes(0, 0, 0)
+
   // 1. Primeiro intervalo (ex: 16:48 até 17:00)
   if (startM > 0) {
-    const nextHour = (startH + 1) % 24
-    const label = `${inicio} - ${String(nextHour).padStart(2, '0')}:00`
+    const startRange = new Date(shiftStart)
+    
+    const endRange = new Date(startRange)
+    if (endRange.getMinutes() > 0) {
+      endRange.setHours(endRange.getHours() + 1, 0, 0, 0)
+    }
+
+    const label = `${inicio} - ${String(endRange.getHours()).padStart(2, '0')}:00`
     
     // Meta proporcional aos minutos restantes da hora
     const minutosRestantes = 60 - startM
     const objetivo = Math.round((META_POR_HORA * minutosRestantes) / 60)
     
-    const count = productions.filter((p) => {
-      const d = new Date(p.timestamp)
-      const ph = d.getHours()
-      const pm = d.getMinutes()
-      if (ph === startH) return pm >= startM
-      return false
+    const count = productionsWithDates.filter((p) => {
+      return p.date >= startRange && p.date < endRange
     }).length
 
     intervals.push({
@@ -139,7 +153,7 @@ function buildHourlyData(
       horaNum: startH,
       quantidade: count,
       objetivo: objetivo,
-      isCurrent: currentHour === startH,
+      isCurrent: now >= startRange && now < endRange,
     })
   }
 
@@ -149,23 +163,31 @@ function buildHourlyData(
 
   for (let i = 0; i <= totalHours; i++) {
     const currentH = (h + i) % 24
-    const nextH = (currentH + 1) % 24
-    const label = `${String(currentH).padStart(2, '0')}:00 - ${String(nextH).padStart(2, '0')}:00`
+    
+    const startRange = new Date(anchorDate)
+    // Ajustamos o dia baseado no deslocamento acumulado desde o início do turno
+    // Se o turno começou às 16:00 e estamos na hora 2 (2 AM), i será ~10.
+    // Usamos o shiftStart como âncora real.
+    startRange.setHours(shiftStart.getHours() + (startM > 0 ? i + 1 : i), 0, 0, 0)
+
+    const endRange = new Date(startRange)
+    endRange.setHours(startRange.getHours() + 1, 0, 0, 0)
+
+    const label = `${String(startRange.getHours()).padStart(2, '0')}:00 - ${String(endRange.getHours()).padStart(2, '0')}:00`
 
     // Regra: meta 0 se for horário de janta (21:00 às 22:00)
-    const objetivo = currentH === 21 ? 0 : META_POR_HORA
+    const objetivo = startRange.getHours() === 21 ? 0 : META_POR_HORA
 
-    const count = productions.filter((p) => {
-      const ph = new Date(p.timestamp).getHours()
-      return ph === currentH
+    const count = productionsWithDates.filter((p) => {
+      return p.date >= startRange && p.date < endRange
     }).length
 
     intervals.push({
       hora: label,
-      horaNum: currentH,
+      horaNum: startRange.getHours(),
       quantidade: count,
       objetivo: objetivo,
-      isCurrent: currentHour === currentH,
+      isCurrent: now >= startRange && now < endRange,
     })
   }
 
