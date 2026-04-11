@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { getTodayRange } from '@/utils/cron-reset'
-import type { Production, HourlyProduction, RankingEntry, LastProduction } from '@/types'
+import type { Production, HourlyProduction, RankingEntry, LastProduction, RealtimePayload } from '@/types'
 
 interface ProductionState {
   productions: Production[]
@@ -65,7 +65,8 @@ export function useProductionRealtime(turnoInicio = '16:48', turnoFim = '05:00')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'productions' },
-        async (payload) => {
+        async (payload: any) => {
+          console.log('Realtime INSERT received:', payload)
           // Quando um carro é inserido, vamos buscar o registro completo (com o join do funcionário)
           const { data, error } = await supabase
             .from('productions')
@@ -92,7 +93,7 @@ export function useProductionRealtime(turnoInicio = '16:48', turnoFim = '05:00')
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
           console.log('Realtime production active')
         }
@@ -140,11 +141,8 @@ function buildHourlyData(
   // 1. Primeiro intervalo (ex: 16:48 até 17:00)
   if (startM > 0) {
     const startRange = new Date(shiftStart)
-    
     const endRange = new Date(startRange)
-    if (endRange.getMinutes() > 0) {
-      endRange.setHours(endRange.getHours() + 1, 0, 0, 0)
-    }
+    endRange.setHours(endRange.getHours() + 1, 0, 0, 0)
 
     const label = `${inicio} AS ${String(endRange.getHours()).padStart(2, '0')}:00`
     
@@ -153,7 +151,8 @@ function buildHourlyData(
     const objetivo = Math.round((META_POR_HORA * minutosRestantes) / 60)
     
     const count = productionsWithDates.filter((p) => {
-      return p.date >= startRange && p.date < endRange
+      // Usamos timestamps para comparação precisa e evitar problemas de fuso em objetos Date
+      return p.date.getTime() >= startRange.getTime() && p.date.getTime() < endRange.getTime()
     }).length
 
     intervals.push({
@@ -161,7 +160,7 @@ function buildHourlyData(
       horaNum: startH,
       quantidade: count,
       objetivo: objetivo,
-      isCurrent: now >= startRange && now < endRange,
+      isCurrent: now.getTime() >= startRange.getTime() && now.getTime() < endRange.getTime(),
     })
   }
 
@@ -173,9 +172,6 @@ function buildHourlyData(
     const currentH = (h + i) % 24
     
     const startRange = new Date(anchorDate)
-    // Ajustamos o dia baseado no deslocamento acumulado desde o início do turno
-    // Se o turno começou às 16:00 e estamos na hora 2 (2 AM), i será ~10.
-    // Usamos o shiftStart como âncora real.
     startRange.setHours(shiftStart.getHours() + (startM > 0 ? i + 1 : i), 0, 0, 0)
 
     const endRange = new Date(startRange)
@@ -189,7 +185,7 @@ function buildHourlyData(
     const objetivo = currentH === 21 ? 0 : META_POR_HORA
 
     const count = productionsWithDates.filter((p) => {
-      return p.date >= startRange && p.date < endRange
+      return p.date.getTime() >= startRange.getTime() && p.date.getTime() < endRange.getTime()
     }).length
 
     intervals.push({
@@ -197,7 +193,7 @@ function buildHourlyData(
       horaNum: currentH,
       quantidade: count,
       objetivo: objetivo,
-      isCurrent: now >= startRange && now < endRange,
+      isCurrent: now.getTime() >= startRange.getTime() && now.getTime() < endRange.getTime(),
     })
   }
 

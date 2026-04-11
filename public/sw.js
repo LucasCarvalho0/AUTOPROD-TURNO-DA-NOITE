@@ -97,7 +97,23 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Stale-while-revalidate for page navigations
+  // Network-first for page navigations (ensure latest data/dashboard)
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+          }
+          return response
+        })
+        .catch(() => caches.match(request))
+    )
+    return
+  }
+
+  // Stale-while-revalidate for other resources (fallback)
   event.respondWith(
     caches.match(request).then((cached) => {
       const fetchPromise = fetch(request)
