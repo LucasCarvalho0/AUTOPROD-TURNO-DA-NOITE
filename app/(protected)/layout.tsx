@@ -8,7 +8,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }} suppressHydrationWarning>
       {/* Sidebar — desktop only */}
-      <div className="hidden md:flex">
+      <div className="hidden md:flex" suppressHydrationWarning>
         <Sidebar />
       </div>
 

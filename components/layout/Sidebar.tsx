@@ -107,10 +107,12 @@ export function Sidebar() {
             <div className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }} suppressHydrationWarning>
               {mounted && user?.nome ? user.nome : (mounted ? 'Carregando...' : '')}
             </div>
-            {mounted && (
+            {mounted ? (
               <div className="text-[10px]" style={{ color: 'var(--text-secondary)' }} suppressHydrationWarning>
                 {cargo}
               </div>
+            ) : (
+              <div className="text-[10px] opacity-0" suppressHydrationWarning>...</div>
             )}
           </div>
         </div>

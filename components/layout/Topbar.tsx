@@ -60,9 +60,9 @@ export function Topbar({ title }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-4" suppressHydrationWarning>
-        {mounted && (
+        {mounted ? (
           <div
-            className="px-3 py-1 rounded-full text-xs font-medium"
+            className="px-3 py-1 rounded-full text-xs font-medium animate-pulse"
             style={{
               background: 'rgba(24,201,125,0.12)',
               border: '1px solid rgba(24,201,125,0.25)',
@@ -72,8 +72,10 @@ export function Topbar({ title }: TopbarProps) {
           >
             ● TURNO ATIVO
           </div>
+        ) : (
+          <div className="px-3 py-1 opacity-0" suppressHydrationWarning>●</div>
         )}
-        <div className="font-display text-lg font-bold" style={{ color: 'var(--accent-yellow)' }} suppressHydrationWarning>
+        <div className="font-display text-lg font-bold min-w-[100px] text-right" style={{ color: 'var(--accent-yellow)' }} suppressHydrationWarning>
           {mounted ? time : '--:--:--'}
         </div>
       </div>
