@@ -34,15 +34,22 @@ export function getTodayRange(): { start: string; end: string } {
   const now = new Date()
   const currentHour = now.getHours()
   
+  // Criamos o ponto de início (reset) em horário LOCAL
   let start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), DAILY_RESET_HOUR, 0, 0)
   
-  // Se ainda não deu 05:00 da manhã, o "Dia de Produção" começou às 05:00 de ontem
+  // Se ainda não deu 05:00 da manhã local, o "Dia de Produção" começou às 05:00 de ontem local
   if (currentHour < DAILY_RESET_HOUR) {
     start.setDate(start.getDate() - 1)
   }
   
-  const end = new Date(start)
-  end.setHours(end.getHours() + 23, 59, 59, 999)
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1)
+
+  console.log('[getTodayRange] Window:', {
+    localStart: start.toLocaleString(),
+    localEnd: end.toLocaleString(),
+    isoStart: start.toISOString(),
+    isoEnd: end.toISOString()
+  })
 
   return {
     start: start.toISOString(),

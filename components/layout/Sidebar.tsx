@@ -45,12 +45,6 @@ export function Sidebar() {
     router.refresh()
   }
  
-  const initials = mounted && user?.nome 
-    ? user.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() 
-    : '..'
- 
-  const cargo = mounted && (user?.cargo || (user?.tipo === 'admin' ? 'Administrativo' : 'Operador'))
- 
   return (
     <aside
       className="w-[220px] flex-shrink-0 flex flex-col h-screen sticky top-0"
@@ -101,19 +95,15 @@ export function Sidebar() {
             style={{ background: 'linear-gradient(135deg, var(--accent-yellow), var(--accent-blue))', color: '#000' }}
             suppressHydrationWarning
           >
-            {initials}
+            {mounted ? (user?.nome ? user.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '..') : '..'}
           </div>
           <div className="overflow-hidden" suppressHydrationWarning>
             <div className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }} suppressHydrationWarning>
-              {mounted && user?.nome ? user.nome : (mounted ? 'Carregando...' : '')}
+              {!mounted ? '' : (user?.nome ? user.nome : 'Carregando...')}
             </div>
-            {mounted ? (
-              <div className="text-[10px]" style={{ color: 'var(--text-secondary)' }} suppressHydrationWarning>
-                {cargo}
-              </div>
-            ) : (
-              <div className="text-[10px] opacity-0" suppressHydrationWarning>...</div>
-            )}
+            <div className="text-[10px]" style={{ color: 'var(--text-secondary)' }} suppressHydrationWarning>
+              {!mounted ? '...' : (user?.cargo || (user?.tipo === 'admin' ? 'Administrativo' : 'Operador'))}
+            </div>
           </div>
         </div>
         <button

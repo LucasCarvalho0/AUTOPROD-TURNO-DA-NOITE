@@ -31,6 +31,8 @@ export function useProductionRealtime(turnoInicio = '16:48', turnoFim = '05:00')
       const supabase = getSupabaseClient()
       const { start, end } = getTodayRange()
 
+      console.log('[Dashboard] Fetching with range:', { start, end })
+
       const { data, error } = await supabase
         .from('productions')
         .select('*, employee:employees(id, nome, ativo)')
@@ -41,6 +43,8 @@ export function useProductionRealtime(turnoInicio = '16:48', turnoFim = '05:00')
       if (error) throw error
 
       const prods = (data ?? []) as Production[]
+      console.log('[Dashboard] Rows fetched:', prods.length)
+
       setState({
         productions: prods,
         totalToday: prods.length,
@@ -118,40 +122,43 @@ function buildHourlyData(
 ): HourlyProduction[] {
   if (!inicio || !fim) return []
 
+  const [startH, startM] = inicio.split(':').map(Number)
+  const [endH] = fim.split(':').map(Number)
+  const now = new Date()
+
   const productionsWithDates = productions.map(p => ({
     ...p,
     date: new Date(p.timestamp)
   }))
 
-  const [startH, startM] = inicio.split(':').map(Number)
-  const [endH] = fim.split(':').map(Number)
-  const now = new Date()
-
   const intervals: HourlyProduction[] = []
   const META_POR_HORA = 11
 
-  // Ponto de partida âncora: o início do turno de PRODUÇÃO (calculado via cron-reset)
+  // Ponto de partida âncora: o início do turno de PRODUÇÃO baseado no reset
   const { start: shiftStartISO } = getTodayRange()
   const shiftStart = new Date(shiftStartISO)
   
-  // Criamos uma data base para os cálculos de horas cheias
-  const anchorDate = new Date(shiftStart)
-  anchorDate.setMinutes(0, 0, 0)
-
-  // 1. Primeiro intervalo (ex: 16:48 até 17:00)
+  // Vamos descobrir a data "Real" de início baseada em turno_inicio
+  // Se shiftStart é 05:00 de ontem e inicio é 16:48, o turno começou 16:48 de ontem.
+  const actualStart = new Date(shiftStart)
+  actualStart.setHours(startH, startM, 0, 0)
+  
+  // Se o actualStart calculado acima ficou ANTES do shiftStart (o reset), 
+  // significa que na verdade o turno inicia no mesmo dia do reset (ex: turno inicia as 07:00 e reset as 05:00)
+  // Mas no nosso caso (16:48 e 05:00), 16:48 ontem é > 05:00 ontem. OK.
+  
+  // 1. Primeiro intervalo parcial (ex: 16:48 até 17:00)
   if (startM > 0) {
-    const startRange = new Date(shiftStart)
-    const endRange = new Date(startRange)
-    endRange.setHours(endRange.getHours() + 1, 0, 0, 0)
+    const startRange = new Date(actualStart)
+    const endRange = new Date(actualStart)
+    endRange.setMinutes(0, 0, 0)
+    endRange.setHours(endRange.getHours() + 1)
 
     const label = `${inicio} AS ${String(endRange.getHours()).padStart(2, '0')}:00`
-    
-    // Meta proporcional aos minutos restantes da hora
     const minutosRestantes = 60 - startM
     const objetivo = Math.round((META_POR_HORA * minutosRestantes) / 60)
     
     const count = productionsWithDates.filter((p) => {
-      // Usamos timestamps para comparação precisa e evitar problemas de fuso em objetos Date
       return p.date.getTime() >= startRange.getTime() && p.date.getTime() < endRange.getTime()
     }).length
 
@@ -164,24 +171,22 @@ function buildHourlyData(
     })
   }
 
-  // 2. Intervalos de horas cheias (ex: 17:00 até 18:00)
-  let h = startM > 0 ? (startH + 1) % 24 : startH
-  const totalHours = (endH - h + 24) % 24
-
-  for (let i = 0; i <= totalHours; i++) {
-    const currentH = (h + i) % 24
+  // 2. Intervalos de horas cheias
+  const firstFullHour = startM > 0 ? (startH + 1) % 24 : startH
+  const hourDiff = (endH - firstFullHour + 24) % 24
+  
+  for (let i = 0; i <= hourDiff; i++) {
+    const currentH = (firstFullHour + i) % 24
     
-    const startRange = new Date(anchorDate)
-    startRange.setHours(shiftStart.getHours() + (startM > 0 ? i + 1 : i), 0, 0, 0)
+    const startRange = new Date(actualStart)
+    startRange.setMinutes(0, 0, 0)
+    // Se passamos de 24h, o setHours cuida do incremento de dia
+    startRange.setHours(actualStart.getHours() + (startM > 0 ? i + 1 : i))
 
     const endRange = new Date(startRange)
-    endRange.setHours(startRange.getHours() + 1, 0, 0, 0)
+    endRange.setHours(startRange.getHours() + 1)
 
-    const startLabel = String(currentH).padStart(2, '0') + ':00'
-    const endLabel = String((currentH + 1) % 24).padStart(2, '0') + ':00'
-    const label = `${startLabel} AS ${endLabel}`
-
-    // Regra: meta 0 se for horário de janta (21:00 às 22:00)
+    const label = `${String(currentH).padStart(2, '0')}:00 AS ${String((currentH + 1) % 24).padStart(2, '0')}:00`
     const objetivo = currentH === 21 ? 0 : META_POR_HORA
 
     const count = productionsWithDates.filter((p) => {
