@@ -19,7 +19,8 @@ export function useSettings() {
   const [error, setError] = useState<string | null>(null)
 
   const fetchSettings = useCallback(async () => {
-    const supabase = getSupabaseClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const supabase = getSupabaseClient() as any
 
     // Use maybeSingle to handle 0 rows without throwing
     const { data, error: fetchError } = await supabase
@@ -65,7 +66,8 @@ export function useSettings() {
   useEffect(() => {
     fetchSettings()
 
-    const supabase = getSupabaseClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const supabase = getSupabaseClient() as any
     const channel = supabase
       .channel('settings-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, (payload: any) => {
@@ -79,7 +81,8 @@ export function useSettings() {
   }, [fetchSettings])
 
   const updateSettings = async (form: SettingsForm) => {
-    const supabase = getSupabaseClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const supabase = getSupabaseClient() as any
 
     if (!settings.id) {
       // No settings row yet, insert instead
