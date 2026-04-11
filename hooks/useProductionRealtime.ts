@@ -15,7 +15,7 @@ interface ProductionState {
   error: string | null
 }
 
-export function useProductionRealtime(turnoInicio = '06:00', turnoFim = '16:48') {
+export function useProductionRealtime(turnoInicio = '16:48', turnoFim = '05:00') {
   const [state, setState] = useState<ProductionState>({
     productions: [],
     totalToday: 0,
@@ -27,32 +27,33 @@ export function useProductionRealtime(turnoInicio = '06:00', turnoFim = '16:48')
   })
 
   const fetchProductions = useCallback(async () => {
-    const supabase = getSupabaseClient()
-    const { start, end } = getTodayRange()
+    try {
+      const supabase = getSupabaseClient()
+      const { start, end } = getTodayRange()
 
-    const { data, error } = await supabase
-      .from('productions')
-      .select('*, employee:employees(id, nome, ativo)')
-      .gte('timestamp', start)
-      .lte('timestamp', end)
-      .order('timestamp', { ascending: false })
+      const { data, error } = await supabase
+        .from('productions')
+        .select('*, employee:employees(id, nome, ativo)')
+        .gte('timestamp', start)
+        .lte('timestamp', end)
+        .order('timestamp', { ascending: false })
 
-    if (error) {
-      setState((s) => ({ ...s, error: error.message, loading: false }))
-      return
+      if (error) throw error
+
+      const prods = (data ?? []) as Production[]
+      setState({
+        productions: prods,
+        totalToday: prods.length,
+        hourlyData: buildHourlyData(prods, turnoInicio, turnoFim),
+        ranking: buildRanking(prods),
+        lastProduction: prods[0] ? buildLastProduction(prods[0]) : null,
+        loading: false,
+        error: null,
+      })
+    } catch (err: any) {
+      console.error('Fetch error:', err)
+      setState((s) => ({ ...s, error: err.message, loading: false }))
     }
-
-    const prods = (data ?? []) as Production[]
-    setState((s) => ({
-      ...s,
-      productions: prods,
-      totalToday: prods.length,
-      hourlyData: buildHourlyData(prods, turnoInicio, turnoFim),
-      ranking: buildRanking(prods),
-      lastProduction: prods[0] ? buildLastProduction(prods[0]) : null,
-      loading: false,
-      error: null,
-    }))
   }, [turnoInicio, turnoFim])
 
   useEffect(() => {
@@ -60,19 +61,19 @@ export function useProductionRealtime(turnoInicio = '06:00', turnoFim = '16:48')
 
     const supabase = getSupabaseClient()
     const channel = supabase
-      .channel('productions-realtime')
+      .channel('productions-realtime-all')
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'productions' },
-        async (payload: any) => {
-          // Fetch with employee join
-          const { data } = await supabase
+        async (payload) => {
+          // Quando um carro é inserido, vamos buscar o registro completo (com o join do funcionário)
+          const { data, error } = await supabase
             .from('productions')
             .select('*, employee:employees(id, nome, ativo)')
             .eq('id', payload.new.id)
             .single()
 
-          if (data) {
+          if (!error && data) {
             const newProd = data as Production
             setState((s) => {
               const updated = [newProd, ...s.productions]
@@ -85,13 +86,20 @@ export function useProductionRealtime(turnoInicio = '06:00', turnoFim = '16:48')
                 lastProduction: buildLastProduction(newProd),
               }
             })
+          } else {
+            // Se falhar o fetch individual, recarrega tudo para garantir
+            fetchProductions()
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Realtime production active')
+        }
+      })
 
     return () => {
-      channel.unsubscribe()
+      supabase.removeChannel(channel)
     }
   }, [fetchProductions, turnoInicio, turnoFim])
 
