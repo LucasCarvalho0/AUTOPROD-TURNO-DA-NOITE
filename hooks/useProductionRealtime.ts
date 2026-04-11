@@ -33,16 +33,25 @@ export function useProductionRealtime(turnoInicio = '16:48', turnoFim = '05:00')
 
       console.log('[Dashboard] Fetching with range:', { start, end })
 
-      const { data, error } = await supabase
+      // 1. Query para os dados do turno atual (zeram no reset)
+      const { data: rangeData, error: rangeError } = await supabase
         .from('productions')
         .select('*, employee:employees(id, nome, ativo)')
         .gte('timestamp', start)
         .lte('timestamp', end)
         .order('timestamp', { ascending: false })
 
-      if (error) throw error
+      if (rangeError) throw rangeError
 
-      const prods = (data ?? []) as Production[]
+      // 2. Query para o ÚLTIMO carro absoluto (não zera no reset)
+      const { data: lastData } = await supabase
+        .from('productions')
+        .select('*, employee:employees(id, nome, ativo)')
+        .order('timestamp', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      const prods = (rangeData ?? []) as Production[]
       console.log('[Dashboard] Rows fetched:', prods.length)
 
       setState({
@@ -50,7 +59,7 @@ export function useProductionRealtime(turnoInicio = '16:48', turnoFim = '05:00')
         totalToday: prods.length,
         hourlyData: buildHourlyData(prods, turnoInicio, turnoFim),
         ranking: buildRanking(prods),
-        lastProduction: prods[0] ? buildLastProduction(prods[0]) : null,
+        lastProduction: lastData ? buildLastProduction(lastData as Production) : null,
         loading: false,
         error: null,
       })

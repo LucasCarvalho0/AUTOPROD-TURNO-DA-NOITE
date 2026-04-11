@@ -18,11 +18,13 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  
+  // Usamos um estado inicial que coincida com o que o servidor renderiza
   const [user, setUser] = useState<{ nome: string; tipo: string; cargo?: string } | null>(null)
-  const [mounted, setMounted] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
  
   useEffect(() => {
-    setMounted(true)
+    setIsMounted(true)
     async function loadUser() {
       const supabase = getSupabaseClient()
       const { data: { user: authUser } } = await supabase.auth.getUser()
@@ -52,20 +54,19 @@ export function Sidebar() {
         background: 'var(--bg-secondary)',
         borderRight: '1px solid var(--border-subtle)',
       }}
-      suppressHydrationWarning
     >
       {/* Logo */}
-      <div className="px-4 py-5" style={{ borderBottom: '1px solid var(--border-subtle)' }} suppressHydrationWarning>
-        <div className="font-display text-xl font-bold tracking-widest" style={{ color: 'var(--accent-yellow)' }} suppressHydrationWarning>
+      <div className="px-4 py-5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <div className="font-display text-xl font-bold tracking-widest" style={{ color: 'var(--accent-yellow)' }}>
           AUTOPROD
         </div>
-        <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)', letterSpacing: '0.05em' }} suppressHydrationWarning>
+        <div className="text-xs mt-1" style={{ color: 'var(--text-secondary)', letterSpacing: '0.05em' }}>
           TURNO DA NOITE
         </div>
       </div>
  
       {/* Nav */}
-      <nav className="flex-1 p-2 space-y-0.5" suppressHydrationWarning>
+      <nav className="flex-1 p-2 space-y-0.5">
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
           return (
@@ -78,34 +79,37 @@ export function Sidebar() {
                 color: isActive ? 'var(--accent-yellow)' : 'var(--text-secondary)',
                 fontWeight: isActive ? 500 : 400,
               }}
-              suppressHydrationWarning
             >
-              <span className="w-5 text-center text-base" suppressHydrationWarning>{item.icon}</span>
+              <span className="w-5 text-center text-base">{item.icon}</span>
               {item.label}
             </Link>
           )
         })}
       </nav>
  
-      {/* Footer */}
-      <div className="p-2" style={{ borderTop: '1px solid var(--border-subtle)' }} suppressHydrationWarning>
-        <div className="flex items-center gap-3 px-3 py-2 mb-2" suppressHydrationWarning>
+      {/* Footer / User Info */}
+      <div 
+        className="p-2" 
+        style={{ borderTop: '1px solid var(--border-subtle)' }} 
+        suppressHydrationWarning // Protege contra extensões que adicionam atributos como bis_skin_checked
+      >
+        <div className="flex items-center gap-3 px-3 py-2 mb-2">
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center font-display font-bold text-sm flex-shrink-0"
             style={{ background: 'linear-gradient(135deg, var(--accent-yellow), var(--accent-blue))', color: '#000' }}
-            suppressHydrationWarning
           >
-            {mounted ? (user?.nome ? user.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '..') : '..'}
+            {user?.nome ? user.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '..'}
           </div>
-          <div className="overflow-hidden" suppressHydrationWarning>
-            <div className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }} suppressHydrationWarning>
-              {!mounted ? '' : (user?.nome ? user.nome : 'Carregando...')}
+          <div className="overflow-hidden">
+            <div className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+              {!isMounted ? '...' : (user?.nome || 'Carregando...')}
             </div>
-            <div className="text-[10px]" style={{ color: 'var(--text-secondary)' }} suppressHydrationWarning>
-              {!mounted ? '...' : (user?.cargo || (user?.tipo === 'admin' ? 'Administrativo' : 'Operador'))}
+            <div className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
+              {!isMounted ? '...' : (user?.cargo || (user?.tipo === 'admin' ? 'Administrativo' : 'Operador'))}
             </div>
           </div>
         </div>
+        
         <button
           onClick={handleLogout}
           className="w-full py-2 px-3 rounded-lg text-xs font-medium transition-all"

@@ -59,9 +59,12 @@ export function HourlyProductionChart({ data }: HourlyProductionChartProps) {
                 <div className="w-full flex items-end justify-center gap-[4px] h-full relative">
                   
                   {/* Objetivo Bar (Blue) */}
-                  <div className="relative flex flex-col items-center h-full justify-end w-[40%]">
-                    <span className="absolute -top-6 text-[11px] font-bold text-blue-400">
-                      {item.objetivo}
+                  <div className="relative flex flex-col items-center h-full justify-end w-[42%]">
+                    {/* Label NO FUNDO conforme solicitado */}
+                    <span 
+                      className="absolute bottom-1 z-20 text-[10px] sm:text-[11px] font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
+                    >
+                      {item.objetivo > 0 ? item.objetivo : ''}
                     </span>
                     <div
                       className="w-full rounded-t-sm shadow-[0_4px_10px_rgba(0,0,0,0.3)] transition-all duration-700"
@@ -74,8 +77,15 @@ export function HourlyProductionChart({ data }: HourlyProductionChartProps) {
                   </div>
 
                   {/* Realizado Bar (Green) */}
-                  <div className="relative flex flex-col items-center h-full justify-end w-[40%]">
-                    <span className="absolute -top-6 text-[11px] font-bold text-[#a3e635]">
+                  <div className="relative flex flex-col items-center h-full justify-end w-[42%]">
+                    {/* Label NO TOPO (Sobe junto com o verde) */}
+                    <span 
+                      className="absolute z-20 font-black text-white drop-shadow-[0_1px_3px_rgba(0,0,0,1)] text-[10px] sm:text-[11px]"
+                      style={{ 
+                        bottom: realH > 10 ? `${realH}%` : '4px',
+                        marginBottom: realH > 10 ? '4px' : '0' 
+                      }}
+                    >
                       {item.quantidade}
                     </span>
                     <div
