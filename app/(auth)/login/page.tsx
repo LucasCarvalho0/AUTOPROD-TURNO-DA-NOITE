@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [senha, setSenha] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -23,16 +24,63 @@ export default function LoginPage() {
 
     if (error) {
       console.error('Supabase Auth Error:', { message: error.message, status: error.status, name: error.name })
-      setError(`${error.message} (status: ${error.status})`)
+      setError('Matrícula ou senha incorreta.')
       setLoading(false)
       return
     }
 
+    // Feedback visual imediato de sucesso
+    setSuccess(true)
+    setLoading(false)
+
+    // Navegar sem delay extra
     router.replace('/dashboard')
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }} suppressHydrationWarning>
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ background: 'var(--bg-primary)' }}
+      suppressHydrationWarning
+    >
+      {/* Overlay de transição quando sucesso */}
+      {success && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'var(--bg-primary)',
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            gap: '16px',
+            animation: 'fadeIn 0.2s ease',
+          }}
+        >
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: '50%',
+              background: 'rgba(24,201,125,0.15)',
+              border: '2px solid rgba(24,201,125,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M5 13l4 4L19 7" stroke="#18C97D" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <span style={{ color: 'var(--accent-green)', fontWeight: 700, fontSize: 14, letterSpacing: '0.1em' }}>
+            ACESSO LIBERADO
+          </span>
+        </div>
+      )}
+
       <div
         className="w-[360px] rounded-2xl p-9"
         style={{
@@ -80,6 +128,7 @@ export default function LoginPage() {
               onChange={(e) => setMatricula(e.target.value)}
               placeholder="Ex: 000123"
               required
+              autoComplete="username"
               className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
               style={{
                 background: 'var(--bg-tertiary)',
@@ -104,6 +153,7 @@ export default function LoginPage() {
               onChange={(e) => setSenha(e.target.value)}
               placeholder="••••••••"
               required
+              autoComplete="current-password"
               className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all"
               style={{
                 background: 'var(--bg-tertiary)',
@@ -116,18 +166,44 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <p className="text-sm text-center" style={{ color: 'var(--accent-red)' }}>
-              {error}
+            <p
+              className="text-sm text-center py-2 px-3 rounded-lg"
+              style={{
+                color: 'var(--accent-red)',
+                background: 'rgba(255,80,80,0.08)',
+                border: '1px solid rgba(255,80,80,0.2)',
+              }}
+            >
+              ⚠ {error}
             </p>
           )}
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl font-display font-bold text-lg tracking-widest transition-all disabled:opacity-60"
-            style={{ background: 'var(--accent-yellow)', color: '#000' }}
+            disabled={loading || success}
+            className="w-full py-3 rounded-xl font-display font-bold text-lg tracking-widest transition-all"
+            style={{
+              background: success ? 'var(--accent-green)' : 'var(--accent-yellow)',
+              color: '#000',
+              opacity: loading ? 0.7 : 1,
+              cursor: loading ? 'wait' : 'pointer',
+              transform: 'translateY(0)',
+              transition: 'background 0.3s ease, opacity 0.2s ease',
+            }}
           >
-            {loading ? 'ENTRANDO...' : 'ENTRAR'}
+            {loading ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ animation: 'spin 0.8s linear infinite' }}>
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.3" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+                VERIFICANDO...
+              </span>
+            ) : success ? (
+              '✓ ACESSO LIBERADO'
+            ) : (
+              'ENTRAR'
+            )}
           </button>
         </form>
 
@@ -135,6 +211,16 @@ export default function LoginPage() {
           Acesso restrito a usuários autorizados
         </p>
       </div>
+
+      <style jsx global>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+      `}</style>
     </div>
   )
 }

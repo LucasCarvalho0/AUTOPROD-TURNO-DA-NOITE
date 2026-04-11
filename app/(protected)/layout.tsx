@@ -1,9 +1,7 @@
 import { Sidebar } from '@/components/layout/Sidebar'
 import { MobileNav } from '@/components/layout/MobileNav'
-import { requireAuth } from '@/lib/auth'
 
-export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  await requireAuth()
+export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
