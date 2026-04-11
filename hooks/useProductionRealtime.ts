@@ -173,10 +173,12 @@ function buildHourlyData(
     const endRange = new Date(startRange)
     endRange.setHours(startRange.getHours() + 1, 0, 0, 0)
 
-    const label = `${String(currentH).padStart(2, '0')}:00 AS ${String(endRange.getHours()).padStart(2, '0')}:00`
+    const startLabel = String(currentH).padStart(2, '0') + ':00'
+    const endLabel = String((currentH + 1) % 24).padStart(2, '0') + ':00'
+    const label = `${startLabel} AS ${endLabel}`
 
     // Regra: meta 0 se for horário de janta (21:00 às 22:00)
-    const objetivo = startRange.getHours() === 21 ? 0 : META_POR_HORA
+    const objetivo = currentH === 21 ? 0 : META_POR_HORA
 
     const count = productionsWithDates.filter((p) => {
       return p.date >= startRange && p.date < endRange
@@ -184,7 +186,7 @@ function buildHourlyData(
 
     intervals.push({
       hora: label,
-      horaNum: startRange.getHours(),
+      horaNum: currentH,
       quantidade: count,
       objetivo: objetivo,
       isCurrent: now >= startRange && now < endRange,
