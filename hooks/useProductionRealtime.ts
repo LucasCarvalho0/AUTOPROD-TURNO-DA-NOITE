@@ -167,7 +167,7 @@ function buildHourlyData(
     endRange.setMinutes(0, 0, 0)
     endRange.setHours(endRange.getHours() + 1)
 
-    const label = `${inicio} - ${String(endRange.getHours()).padStart(2, '0')}:00`
+    const label = `${inicio} AS ${String(endRange.getHours()).padStart(2, '0')}:00`
     const objetivo = 2
     
     const count = productionsWithDates.filter((p) => {
@@ -199,7 +199,7 @@ function buildHourlyData(
     const endRange = new Date(startRange)
     endRange.setHours(startRange.getHours() + 1)
 
-    const label = `${String(currentH).padStart(2, '0')}:00 - ${String((currentH + 1) % 24).padStart(2, '0')}:00`
+    const label = `${String(currentH).padStart(2, '0')}:00 AS ${String((currentH + 1) % 24).padStart(2, '0')}:00`
     const objetivo = currentH === 21 ? 0 : META_POR_HORA
 
     const count = productionsWithDates.filter((p) => {

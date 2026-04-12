@@ -117,8 +117,8 @@ export function HourlyProductionChart({ data }: HourlyProductionChartProps) {
                       }}
                     >
                       {item.hora.split(' AS ').map((part, i) => (
-                        <div key={i} className={i === 1 ? 'mt-0.5 opacity-60 text-[7px] sm:text-[9px]' : ''}>
-                          {i === 1 ? `AS ${part}` : part}
+                        <div key={i} className={i === 1 ? 'mt-0.5 opacity-40 text-[7px] sm:text-[9px]' : ''}>
+                          {i === 0 ? `${part} AS` : part}
                         </div>
                       ))}
                     </div>
