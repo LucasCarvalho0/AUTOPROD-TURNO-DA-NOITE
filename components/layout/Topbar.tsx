@@ -10,6 +10,7 @@ interface TopbarProps {
 export function Topbar({ title }: TopbarProps) {
   const [time, setTime] = useState('')
   const [userName, setUserName] = useState('')
+  const [userCargo, setUserCargo] = useState('')
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -27,12 +28,16 @@ export function Topbar({ title }: TopbarProps) {
       if (authUser) {
         const { data } = await supabase
           .from('users')
-          .select('nome')
+          .select('nome, cargo')
           .eq('id', authUser.id)
           .single()
-        if (data?.nome) {
-          const first = data.nome.split(' ')[0]
-          setUserName(first)
+        
+        if (data) {
+          // Pega os dois primeiros nomes
+          const names = data.nome.split(' ')
+          const display = names.length > 1 ? `${names[0]} ${names[1]}` : names[0]
+          setUserName(display)
+          setUserCargo(data.cargo || '')
         }
       }
     }
@@ -53,9 +58,18 @@ export function Topbar({ title }: TopbarProps) {
           {title}
         </h1>
         {mounted && userName && (
-          <span className="text-sm opacity-50" style={{ color: 'var(--text-secondary)' }} suppressHydrationWarning>
-            Bem-vindo, {userName}
-          </span>
+          <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-secondary)' }} suppressHydrationWarning>
+            <span className="opacity-50">Bem-vindo,</span>
+            <span className="font-bold text-white/90">{userName}</span>
+            {userCargo && (
+              <>
+                <span className="opacity-30">—</span>
+                <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[11px] font-bold uppercase tracking-wider text-white/50">
+                  {userCargo}
+                </span>
+              </>
+            )}
+          </div>
         )}
       </div>
 
