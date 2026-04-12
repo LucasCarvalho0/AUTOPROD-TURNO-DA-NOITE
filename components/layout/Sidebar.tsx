@@ -40,10 +40,16 @@ export function Sidebar() {
   }, [])
  
   async function handleLogout() {
-    const supabase = getSupabaseClient()
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    try {
+      const supabase = getSupabaseClient()
+      await supabase.auth.signOut()
+      // Usar replace para impedir retorno via botão 'voltar' do navegador
+      router.replace('/login')
+      router.refresh()
+    } catch (error) {
+      console.error('Erro ao sair:', error)
+      window.location.href = '/login'
+    }
   }
 
   // Common Structure (SSR + Client)
