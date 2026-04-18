@@ -26,12 +26,21 @@ export default function HistoricoPage() {
       .from('productions')
       .select('*, employee:employees(id, nome, ativo)')
       .order('timestamp', { ascending: false })
-      .limit(500)
 
     if (filterVin) query = query.ilike('vin', `%${filterVin}%`)
     if (filterEmpId) query = query.eq('employee_id', filterEmpId)
-    if (filterDateStart) query = query.gte('timestamp', filterDateStart + 'T00:00:00')
-    if (filterDateEnd) query = query.lte('timestamp', filterDateEnd + 'T23:59:59')
+    
+    // Garante fuso horário BRT (-03:00) na consulta para não pegar horas do dia anterior/seguinte em UTC
+    if (filterDateStart) query = query.gte('timestamp', filterDateStart + 'T00:00:00-03:00')
+    if (filterDateEnd) query = query.lte('timestamp', filterDateEnd + 'T23:59:59-03:00')
+
+    // Limite padrão de 500 para visualização inicial rápida, 
+    // mas estendido para 10.000 ao usar filtros (para garantir que a exportação venha completa)
+    if (!filterVin && !filterEmpId && !filterDateStart && !filterDateEnd) {
+      query = query.limit(500)
+    } else {
+      query = query.limit(10000)
+    }
 
     const { data } = await query
     setProductions((data ?? []) as Production[])

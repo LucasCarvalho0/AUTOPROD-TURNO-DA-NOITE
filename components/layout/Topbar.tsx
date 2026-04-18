@@ -33,11 +33,12 @@ export function Topbar({ title }: TopbarProps) {
           .single()
         
         if (data) {
+          const userData = data as { nome: string; cargo: string | null }
           // Pega os dois primeiros nomes
-          const names = data.nome.split(' ')
+          const names = userData.nome.split(' ')
           const display = names.length > 1 ? `${names[0]} ${names[1]}` : names[0]
           setUserName(display)
-          setUserCargo(data.cargo || '')
+          setUserCargo(userData.cargo || '')
         }
       }
     }
